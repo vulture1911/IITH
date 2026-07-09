@@ -1,0 +1,67 @@
+const byte seg[7]={2,3,4,5,6,7,8};
+const byte dig[4]={9,10,11,12};
+
+const byte H=A0,M=A1,S=A2;
+
+byte num[10][7]={
+{0,0,0,0,0,0,1},{1,0,0,1,1,1,1},
+{0,0,1,0,0,1,0},{0,0,0,0,1,1,0},
+{1,0,0,1,1,0,0},{0,1,0,0,1,0,0},
+{0,1,0,0,0,0,0},{0,0,0,1,1,1,1},
+{0,0,0,0,0,0,0},{0,0,0,0,1,0,0}
+};
+
+int h=0,m=0,s=0;
+bool run=0,show=0;
+unsigned long t=0,p=0,st=0;
+
+void setup(){
+  for(int i=0;i<7;i++) pinMode(seg[i],OUTPUT);
+  for(int i=0;i<4;i++) pinMode(dig[i],OUTPUT);
+  pinMode(H,INPUT_PULLUP);
+  pinMode(M,INPUT_PULLUP);
+  pinMode(S,INPUT_PULLUP);
+}
+
+void loop(){
+
+  if(!run){
+    if(!digitalRead(H)){h=(h+1)%24; delay(200);}
+    if(!digitalRead(M)){m=(m+1)%60; delay(200);}
+    if(!digitalRead(S)){run=1; t=millis(); delay(300);}
+  }
+
+  if(run && millis()-t>=1000){
+    t+=1000;
+    if(++s==60){
+      s=0;
+      if(++m==60){
+        m=0;
+        h=(h+1)%24;
+      }
+    }
+  }
+
+  if(run){
+    if(!digitalRead(S)){
+      if(!p) p=millis();
+      if(millis()-p>1500){show=1; st=millis();}
+    }else p=0;
+
+    if(show && millis()-st>3000) show=0;
+  }
+
+  int d[4]={
+    show?m/10:h/10,
+    show?m%10:h%10,
+    show?s/10:m/10,
+    show?s%10:m%10
+  };
+
+  for(int k=0;k<4;k++){
+    for(int i=0;i<4;i++) digitalWrite(dig[i],LOW);
+    for(int j=0;j<7;j++) digitalWrite(seg[j],num[d[k]][j]);
+    digitalWrite(dig[k],HIGH);
+    delay(3);
+  }
+}
